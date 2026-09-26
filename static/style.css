@@ -1,1829 +1,286 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-    <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-
-    <title>Indian IT Stock Analytics</title>
-
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
-
-    <link rel="stylesheet"
-          href="{{ url_for('static', filename='style.css') }}">
-
-</head>
-
-
-<body>
-
-<div class="container">
-
-
-    <!-- =========================================
-         HEADER
-    ========================================== -->
-
-    <header class="header">
-
-        <h1>Indian IT Stock Analytics</h1>
-
-        <p>
-            Historical Stock Analysis, Machine Learning Predictions
-            and Model Performance
-        </p>
-
-    </header>
-
-
-
-    <!-- =========================================
-         COMPANY SELECTOR
-    ========================================== -->
-
-    <section class="selector-section">
-
-        <label for="company-select">
-            Select Company
-        </label>
-
-        <select id="company-select">
-
-            {% for company in companies %}
-
-            <option value="{{ company }}">
-                {{ company }}
-            </option>
-
-            {% endfor %}
-
-        </select>
-
-    </section>
-
-
-
-    <!-- =========================================
-         PRIMARY KPI CARDS
-    ========================================== -->
-
-    <section class="cards">
-
-        <div class="card">
-
-            <h3>Latest Price</h3>
-
-            <p id="latest-price">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Predicted Price</h3>
-
-            <p id="predicted-price">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Best Model</h3>
-
-            <p id="best-model">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>R² Score</h3>
-
-            <p id="r2-score">
-                -
-            </p>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================
-         ANALYTICS CARDS
-    ========================================== -->
-
-    <section class="cards analytics-cards">
-
-
-        <div class="card">
-
-            <h3>Prediction Change</h3>
-
-            <p id="prediction-change">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Prediction Change %</h3>
-
-            <p id="prediction-change-percent">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Historical High</h3>
-
-            <p id="historical-high">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Historical Low</h3>
-
-            <p id="historical-low">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Average Price</h3>
-
-            <p id="average-price">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Prediction Error</h3>
-
-            <p id="prediction-error">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Error %</h3>
-
-            <p id="error-percent">
-                -
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <h3>Data Points</h3>
-
-            <p id="data-points">
-                -
-            </p>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================
-         ACTUAL VS PREDICTED PRICE
-    ========================================== -->
-
-    <section class="chart-section">
-
-        <h2>
-            Actual vs Predicted Price
-        </h2>
-
-        <!-- IMPORTANT:
-             This element was missing earlier.
-             JavaScript uses this ID.
-        -->
-
-        <div id="price-chart"></div>
-
-    </section>
-
-
-
-    <!-- =========================================
-         MODEL PERFORMANCE TABLE
-    ========================================== -->
-
-    <section class="model-section">
-
-        <h2>
-            Machine Learning Model Performance
-        </h2>
-
-
-        <div class="table-container">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>
-                            Model
-                        </th>
-
-                        <th>
-                            MAE
-                        </th>
-
-                        <th>
-                            RMSE
-                        </th>
-
-                        <th>
-                            R² Score
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody id="model-table-body">
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- =========================================
-         MODEL COMPARISON
-    ========================================== -->
-
-    <section class="chart-section">
-
-        <h2>
-            Model Comparison
-        </h2>
-
-        <div id="model-chart"></div>
-
-    </section>
-
-
-
-    <!-- =========================================
-         HISTORICAL STOCK ANALYSIS
-    ========================================== -->
-
-    <section class="model-section">
-
-        <h2>
-            Historical Stock Analysis
-        </h2>
-
-
-        <!-- DATE FILTER -->
-
-        <div class="date-filter">
-
-
-            <div>
-
-                <label for="start-date">
-                    Start Date
-                </label>
-
-                <input
-                    type="date"
-                    id="start-date"
-                >
-
-            </div>
-
-
-            <div>
-
-                <label for="end-date">
-                    End Date
-                </label>
-
-                <input
-                    type="date"
-                    id="end-date"
-                >
-
-            </div>
-
-
-            <button id="apply-date-filter">
-                Apply
-            </button>
-
-
-        </div>
-
-
-        <p id="selected-date-range"
-           style="margin-bottom: 20px; color: #64748b; font-size: 14px;">
-        </p>
-
-
-
-        <!-- HISTORICAL CARDS -->
-
-        <section class="cards historical-cards">
-
-
-            <div class="card">
-
-                <h3>
-                    Opening Price
-                </h3>
-
-                <p id="historical-open">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Closing Price
-                </h3>
-
-                <p id="historical-close">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Period High
-                </h3>
-
-                <p id="period-high">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Period Low
-                </h3>
-
-                <p id="period-low">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Average Price
-                </h3>
-
-                <p id="period-average">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Period Return
-                </h3>
-
-                <p id="period-return">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Total Volume
-                </h3>
-
-                <p id="total-volume">
-                    -
-                </p>
-
-            </div>
-
-
-            <div class="card">
-
-                <h3>
-                    Maximum Drawdown
-                </h3>
-
-                <p id="maximum-drawdown">
-                    -
-                </p>
-
-            </div>
-
-
-        </section>
-
-
-
-        <!-- HISTORICAL CHART -->
-
-        <div id="historical-chart"></div>
-
-
-    </section>
-
-
-
-    <!-- =========================================
-         FOOTER
-    ========================================== -->
-
-    <footer>
-
-        Indian IT Stock Analytics Dashboard
-
-    </footer>
-
-
-</div>
-
-
-
-<!-- =========================================
-     JAVASCRIPT
-========================================== -->
-
-<script>
-
-
-/* =========================================
-   LOAD DATA FROM FLASK
-========================================= */
-
-const predictions =
-    {{ predictions | tojson }};
-
-
-const modelComparison =
-    {{ model_comparison | tojson }};
-
-
-const historicalData =
-    {{ historical_data | tojson }};
-
-
-
-/* =========================================
-   GET HTML ELEMENTS
-========================================= */
-
-const companySelect =
-    document.getElementById("company-select");
-
-
-
-/* =========================================
-   NUMBER FORMAT
-========================================= */
-
-function formatNumber(value, decimals = 2) {
-
-    if (
-        value === null ||
-        value === undefined ||
-        isNaN(value)
-    ) {
-
-        return "-";
-
+/* =====================================================
+   GLOBAL
+===================================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f7fb;
+    color: #1e293b;
+}
+
+.container {
+    width: 92%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.header {
+    background: linear-gradient(135deg, #0f172a, #1e3a8a);
+    color: white;
+    padding: 35px 30px;
+    margin: 20px 0 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(15, 23, 42, 0.15);
+}
+
+.header h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+}
+
+.header p {
+    margin: 0;
+    font-size: 16px;
+    opacity: 0.85;
+}
+
+/* =====================================================
+   COMPANY SELECTOR
+===================================================== */
+
+.selector-section {
+    background: white;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.selector-section label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.selector-section select {
+    width: 100%;
+    max-width: 350px;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 15px;
+    background: white;
+}
+
+/* =====================================================
+   KPI GRID
+===================================================== */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 25px;
+}
+
+/* =====================================================
+   KPI CARD
+===================================================== */
+
+.card {
+    background: white;
+    padding: 22px;
+    border-radius: 14px;
+    min-height: 120px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
+    border-left: 5px solid #2563eb;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.1);
+}
+
+.card h3 {
+    margin: 0 0 14px;
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.card p {
+    margin: 0;
+    font-size: 25px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* =====================================================
+   CHART SECTIONS
+===================================================== */
+
+.chart-section,
+.model-section {
+    background: white;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 16px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.06);
+}
+
+.chart-section h2,
+.model-section h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 22px;
+    color: #0f172a;
+}
+
+#price-chart,
+#model-chart,
+#prediction-error-chart,
+#absolute-error-chart,
+#historical-chart,
+#moving-average-chart,
+#rsi-chart,
+#bollinger-chart,
+#volume-chart,
+#volume-ratio-chart {
+    width: 100%;
+    min-height: 450px;
+}
+
+/* =====================================================
+   TABLE
+===================================================== */
+
+.table-container,
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+th {
+    background: #1e3a8a;
+    color: white;
+    padding: 13px;
+    text-align: left;
+}
+
+td {
+    padding: 13px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+/* =====================================================
+   DATE FILTER
+===================================================== */
+
+.date-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: end;
+    margin-bottom: 20px;
+    padding: 18px;
+    background: #f8fafc;
+    border-radius: 12px;
+}
+
+.date-filter div {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.date-filter label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.date-filter input {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+}
+
+.date-filter button,
+#apply-date-filter {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 7px;
+    background: #2563eb;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.date-filter button:hover,
+#apply-date-filter:hover {
+    background: #1d4ed8;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.footer {
+    text-align: center;
+    padding: 25px;
+    margin-top: 30px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1000px) {
+
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
-    return Number(value).toLocaleString(
-        "en-IN",
-        {
-            minimumFractionDigits: decimals,
-            maximumFractionDigits: decimals
-        }
-    );
 
 }
 
+@media (max-width: 600px) {
 
+    .container {
+        width: 94%;
+    }
 
-/* =========================================
-   GET SELECTED COMPANY
-========================================= */
+    .cards {
+        grid-template-columns: 1fr;
+    }
 
-function getSelectedCompany() {
+    .header h1 {
+        font-size: 25px;
+    }
 
-    return companySelect.value;
+    .chart-section,
+    .model-section {
+        padding: 15px;
+    }
+
+    .date-filter {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .date-filter input,
+    .date-filter button {
+        width: 100%;
+    }
 
 }
-
-
-
-/* =========================================
-   GET COMPANY PREDICTIONS
-========================================= */
-
-function getCompanyPredictions() {
-
-    const company =
-        getSelectedCompany();
-
-    return predictions.filter(
-        row => row.Company === company
-    );
-
-}
-
-
-
-/* =========================================
-   GET COMPANY MODEL DATA
-========================================= */
-
-function getCompanyModels() {
-
-    const company =
-        getSelectedCompany();
-
-    return modelComparison.filter(
-        row => row.Company === company
-    );
-
-}
-
-
-
-/* =========================================
-   GET COMPANY HISTORICAL DATA
-========================================= */
-
-function getCompanyHistoricalData() {
-
-    const company =
-        getSelectedCompany();
-
-    return historicalData.filter(
-        row => row.Company === company
-    );
-
-}
-
-
-
-/* =========================================
-   UPDATE MAIN DASHBOARD
-========================================= */
-
-function updateDashboard() {
-
-
-    const companyPredictions =
-        getCompanyPredictions();
-
-
-    const companyModels =
-        getCompanyModels();
-
-
-
-    /* -----------------------------------------
-       CHECK DATA
-    ----------------------------------------- */
-
-    if (companyPredictions.length === 0) {
-
-        return;
-
-    }
-
-
-
-    /* =========================================
-       SORT PREDICTIONS BY DATE
-    ========================================== */
-
-    companyPredictions.sort(
-        (a, b) =>
-            new Date(a.Date) -
-            new Date(b.Date)
-    );
-
-
-
-    /* =========================================
-       LATEST PREDICTION
-    ========================================== */
-
-    const latest =
-        companyPredictions[
-            companyPredictions.length - 1
-        ];
-
-
-
-    const actualPrice =
-        Number(latest.Actual_Close);
-
-
-    const predictedPrice =
-        Number(latest.Predicted_Close);
-
-
-
-    /* =========================================
-       LATEST PRICE
-    ========================================== */
-
-    document.getElementById(
-        "latest-price"
-    ).textContent =
-        formatNumber(actualPrice);
-
-
-
-    /* =========================================
-       PREDICTED PRICE
-    ========================================== */
-
-    document.getElementById(
-        "predicted-price"
-    ).textContent =
-        formatNumber(predictedPrice);
-
-
-
-    /* =========================================
-       PREDICTION CHANGE
-    ========================================== */
-
-    const predictionChange =
-        predictedPrice -
-        actualPrice;
-
-
-    document.getElementById(
-        "prediction-change"
-    ).textContent =
-        formatNumber(predictionChange);
-
-
-
-    /* =========================================
-       PREDICTION CHANGE %
-    ========================================== */
-
-    let predictionChangePercent = 0;
-
-
-    if (actualPrice !== 0) {
-
-        predictionChangePercent =
-            (
-                predictionChange /
-                actualPrice
-            ) * 100;
-
-    }
-
-
-    document.getElementById(
-        "prediction-change-percent"
-    ).textContent =
-        formatNumber(
-            predictionChangePercent
-        ) + "%";
-
-
-
-    /* =========================================
-       PREDICTION ERROR
-    ========================================== */
-
-    const predictionError =
-        Math.abs(
-            predictedPrice -
-            actualPrice
-        );
-
-
-    document.getElementById(
-        "prediction-error"
-    ).textContent =
-        formatNumber(
-            predictionError
-        );
-
-
-
-    /* =========================================
-       ERROR %
-    ========================================== */
-
-    let errorPercent = 0;
-
-
-    if (actualPrice !== 0) {
-
-        errorPercent =
-            (
-                predictionError /
-                actualPrice
-            ) * 100;
-
-    }
-
-
-    document.getElementById(
-        "error-percent"
-    ).textContent =
-        formatNumber(
-            errorPercent
-        ) + "%";
-
-
-
-    /* =========================================
-       MODEL DATA
-    ========================================== */
-
-    if (companyModels.length > 0) {
-
-
-        /* -------------------------------------
-           BEST MODEL
-        ------------------------------------- */
-
-        const bestModel =
-            companyModels.reduce(
-                (best, current) => {
-
-                    if (
-                        Number(current.R2_Score) >
-                        Number(best.R2_Score)
-                    ) {
-
-                        return current;
-
-                    }
-
-                    return best;
-
-                }
-            );
-
-
-        document.getElementById(
-            "best-model"
-        ).textContent =
-            bestModel.Model;
-
-
-
-        /* -------------------------------------
-           BEST MODEL R2
-        ------------------------------------- */
-
-        document.getElementById(
-            "r2-score"
-        ).textContent =
-            formatNumber(
-                Number(bestModel.R2_Score),
-                4
-            );
-
-    }
-
-
-
-    /* =========================================
-       HISTORICAL DATA
-    ========================================== */
-
-    const companyHistorical =
-        getCompanyHistoricalData();
-
-
-    if (companyHistorical.length > 0) {
-
-
-        const prices =
-            companyHistorical
-                .map(row => Number(row.Close))
-                .filter(value => !isNaN(value));
-
-
-        if (prices.length > 0) {
-
-
-            const high =
-                Math.max(...prices);
-
-
-            const low =
-                Math.min(...prices);
-
-
-            const average =
-                prices.reduce(
-                    (sum, value) =>
-                        sum + value,
-                    0
-                ) / prices.length;
-
-
-
-            document.getElementById(
-                "historical-high"
-            ).textContent =
-                formatNumber(high);
-
-
-
-            document.getElementById(
-                "historical-low"
-            ).textContent =
-                formatNumber(low);
-
-
-
-            document.getElementById(
-                "average-price"
-            ).textContent =
-                formatNumber(average);
-
-
-
-            document.getElementById(
-                "data-points"
-            ).textContent =
-                prices.length.toLocaleString(
-                    "en-IN"
-                );
-
-        }
-
-    }
-
-
-
-    /* =========================================
-       PRICE CHART
-    ========================================== */
-
-    const chartDates =
-        companyPredictions.map(
-            row => row.Date
-        );
-
-
-    const actualValues =
-        companyPredictions.map(
-            row => Number(row.Actual_Close)
-        );
-
-
-    const predictedValues =
-        companyPredictions.map(
-            row => Number(row.Predicted_Close)
-        );
-
-
-
-    const actualTrace = {
-
-        x: chartDates,
-
-        y: actualValues,
-
-        mode: "lines",
-
-        name: "Actual Price"
-
-    };
-
-
-
-    const predictedTrace = {
-
-        x: chartDates,
-
-        y: predictedValues,
-
-        mode: "lines",
-
-        name: "Predicted Price"
-
-    };
-
-
-
-    const priceLayout = {
-
-        margin: {
-            l: 60,
-            r: 30,
-            t: 20,
-            b: 60
-        },
-
-        xaxis: {
-            title: "Date"
-        },
-
-        yaxis: {
-            title: "Price"
-        },
-
-        hovermode: "x unified",
-
-        legend: {
-            orientation: "h"
-        },
-
-        paper_bgcolor: "white",
-
-        plot_bgcolor: "white"
-
-    };
-
-
-
-    Plotly.newPlot(
-        "price-chart",
-        [
-            actualTrace,
-            predictedTrace
-        ],
-        priceLayout,
-        {
-            responsive: true
-        }
-    );
-
-
-
-    /* =========================================
-       MODEL PERFORMANCE TABLE
-    ========================================== */
-
-    const tableBody =
-        document.getElementById(
-            "model-table-body"
-        );
-
-
-    tableBody.innerHTML = "";
-
-
-
-    companyModels.forEach(
-        model => {
-
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <td>
-                    ${model.Model}
-                </td>
-
-                <td>
-                    ${formatNumber(
-                        Number(model.MAE),
-                        2
-                    )}
-                </td>
-
-                <td>
-                    ${formatNumber(
-                        Number(model.RMSE),
-                        2
-                    )}
-                </td>
-
-                <td>
-                    ${formatNumber(
-                        Number(model.R2_Score),
-                        4
-                    )}
-                </td>
-
-            `;
-
-
-            tableBody.appendChild(row);
-
-        }
-    );
-
-
-
-    /* =========================================
-       MODEL COMPARISON CHART
-    ========================================== */
-
-    const modelNames =
-        companyModels.map(
-            model => model.Model
-        );
-
-
-    const r2Values =
-        companyModels.map(
-            model =>
-                Number(model.R2_Score)
-        );
-
-
-
-    const modelTrace = {
-
-        x: modelNames,
-
-        y: r2Values,
-
-        type: "bar",
-
-        name: "R² Score"
-
-    };
-
-
-
-    const modelLayout = {
-
-        margin: {
-            l: 60,
-            r: 30,
-            t: 20,
-            b: 80
-        },
-
-        xaxis: {
-            title: "Model"
-        },
-
-        yaxis: {
-            title: "R² Score"
-        },
-
-        paper_bgcolor: "white",
-
-        plot_bgcolor: "white"
-
-    };
-
-
-
-    Plotly.newPlot(
-        "model-chart",
-        [modelTrace],
-        modelLayout,
-        {
-            responsive: true
-        }
-    );
-
-}
-
-
-
-/* =========================================
-   DEFAULT HISTORICAL DATES
-========================================= */
-
-function setDefaultDates() {
-
-
-    const companyHistorical =
-        getCompanyHistoricalData();
-
-
-    if (
-        companyHistorical.length === 0
-    ) {
-
-        return;
-
-    }
-
-
-
-    /* =========================================
-       SORT BY DATE
-    ========================================== */
-
-    companyHistorical.sort(
-        (a, b) =>
-            new Date(a.Date) -
-            new Date(b.Date)
-    );
-
-
-
-    const firstDate =
-        companyHistorical[0].Date
-            .substring(0, 10);
-
-
-    const lastDate =
-        companyHistorical[
-            companyHistorical.length - 1
-        ].Date.substring(0, 10);
-
-
-
-    document.getElementById(
-        "start-date"
-    ).value = firstDate;
-
-
-    document.getElementById(
-        "end-date"
-    ).value = lastDate;
-
-}
-
-
-
-/* =========================================
-   HISTORICAL ANALYSIS
-========================================= */
-
-function updateHistoricalAnalysis() {
-
-
-    const companyHistorical =
-        getCompanyHistoricalData();
-
-
-
-    if (
-        companyHistorical.length === 0
-    ) {
-
-        return;
-
-    }
-
-
-
-    /* =========================================
-       GET SELECTED DATES
-    ========================================== */
-
-    const selectedStart =
-        document.getElementById(
-            "start-date"
-        ).value;
-
-
-    const selectedEnd =
-        document.getElementById(
-            "end-date"
-        ).value;
-
-
-
-    /* =========================================
-       VALIDATE DATES
-    ========================================== */
-
-    if (
-        !selectedStart ||
-        !selectedEnd
-    ) {
-
-        return;
-
-    }
-
-
-
-    if (
-        selectedStart > selectedEnd
-    ) {
-
-        alert(
-            "Start date cannot be after end date."
-        );
-
-        return;
-
-    }
-
-
-
-    /* =========================================
-       FILTER DATA
-    ========================================== */
-
-    const filteredData =
-        companyHistorical.filter(
-            row => {
-
-                const rowDate =
-                    String(row.Date)
-                        .substring(0, 10);
-
-                return (
-                    rowDate >= selectedStart &&
-                    rowDate <= selectedEnd
-                );
-
-            }
-        );
-
-
-
-    /* =========================================
-       CHECK FILTER RESULT
-    ========================================== */
-
-    if (
-        filteredData.length === 0
-    ) {
-
-        document.getElementById(
-            "selected-date-range"
-        ).textContent =
-            "No trading data available for the selected date range.";
-
-        document.getElementById(
-            "historical-open"
-        ).textContent = "-";
-
-        document.getElementById(
-            "historical-close"
-        ).textContent = "-";
-
-        document.getElementById(
-            "period-high"
-        ).textContent = "-";
-
-        document.getElementById(
-            "period-low"
-        ).textContent = "-";
-
-        document.getElementById(
-            "period-average"
-        ).textContent = "-";
-
-        document.getElementById(
-            "period-return"
-        ).textContent = "-";
-
-        document.getElementById(
-            "total-volume"
-        ).textContent = "-";
-
-        document.getElementById(
-            "maximum-drawdown"
-        ).textContent = "-";
-
-        Plotly.react(
-            "historical-chart",
-            [],
-            {
-                annotations: [
-                    {
-                        text: "No data available for selected dates",
-                        showarrow: false,
-                        x: 0.5,
-                        y: 0.5,
-                        xref: "paper",
-                        yref: "paper",
-                        font: {
-                            size: 16
-                        }
-                    }
-                ]
-            },
-            {
-                responsive: true
-            }
-        );
-
-        return;
-
-    }
-
-
-
-    /* =========================================
-       SORT FILTERED DATA
-    ========================================== */
-
-    filteredData.sort(
-        (a, b) =>
-            new Date(a.Date) -
-            new Date(b.Date)
-    );
-
-
-
-    /* =========================================
-       FIRST AND LAST ROW
-    ========================================== */
-
-    const firstRow =
-        filteredData[0];
-
-
-    const lastRow =
-        filteredData[
-            filteredData.length - 1
-        ];
-
-
-
-    /* =========================================
-       OPENING PRICE
-    ========================================== */
-
-    const openingPrice =
-        Number(firstRow.Open);
-
-
-
-    /* =========================================
-       CLOSING PRICE
-    ========================================== */
-
-    const closingPrice =
-        Number(lastRow.Close);
-
-
-
-    /* =========================================
-       HIGH / LOW
-    ========================================== */
-
-    const closePrices =
-        filteredData
-            .map(row => Number(row.Close))
-            .filter(value => !isNaN(value));
-
-
-    const highPrices =
-        filteredData
-            .map(row => Number(row.High))
-            .filter(value => !isNaN(value));
-
-
-    const lowPrices =
-        filteredData
-            .map(row => Number(row.Low))
-            .filter(value => !isNaN(value));
-
-
-
-    const periodHigh =
-        Math.max(...highPrices);
-
-
-    const periodLow =
-        Math.min(...lowPrices);
-
-
-
-    /* =========================================
-       AVERAGE PRICE
-    ========================================== */
-
-    const averagePrice =
-        closePrices.reduce(
-            (sum, value) =>
-                sum + value,
-            0
-        ) / closePrices.length;
-
-
-
-    /* =========================================
-       PERIOD RETURN
-    ========================================== */
-
-    let periodReturn = 0;
-
-
-    if (
-        openingPrice !== 0
-    ) {
-
-        periodReturn =
-            (
-                (
-                    closingPrice -
-                    openingPrice
-                ) /
-                openingPrice
-            ) * 100;
-
-    }
-
-
-
-    /* =========================================
-       TOTAL VOLUME
-    ========================================== */
-
-    const totalVolume =
-        filteredData
-            .map(row => Number(row.Volume))
-            .filter(value => !isNaN(value))
-            .reduce(
-                (sum, value) =>
-                    sum + value,
-                0
-            );
-
-
-
-    /* =========================================
-       MAXIMUM DRAWDOWN
-    ========================================== */
-
-    let peak = -Infinity;
-
-    let maximumDrawdown = 0;
-
-
-    filteredData.forEach(
-        row => {
-
-            const close =
-                Number(row.Close);
-
-
-            if (
-                isNaN(close)
-            ) {
-
-                return;
-
-            }
-
-
-            if (
-                close > peak
-            ) {
-
-                peak = close;
-
-            }
-
-
-            if (
-                peak > 0
-            ) {
-
-                const drawdown =
-                    (
-                        (
-                            close -
-                            peak
-                        ) /
-                        peak
-                    ) * 100;
-
-
-                if (
-                    drawdown <
-                    maximumDrawdown
-                ) {
-
-                    maximumDrawdown =
-                        drawdown;
-
-                }
-
-            }
-
-        }
-    );
-
-
-
-    /* =========================================
-       UPDATE CARDS
-    ========================================== */
-
-    document.getElementById(
-        "historical-open"
-    ).textContent =
-        formatNumber(openingPrice);
-
-
-
-    document.getElementById(
-        "historical-close"
-    ).textContent =
-        formatNumber(closingPrice);
-
-
-
-    document.getElementById(
-        "period-high"
-    ).textContent =
-        formatNumber(periodHigh);
-
-
-
-    document.getElementById(
-        "period-low"
-    ).textContent =
-        formatNumber(periodLow);
-
-
-
-    document.getElementById(
-        "period-average"
-    ).textContent =
-        formatNumber(averagePrice);
-
-
-
-    document.getElementById(
-        "period-return"
-    ).textContent =
-        formatNumber(periodReturn) + "%";
-
-
-
-    document.getElementById(
-        "total-volume"
-    ).textContent =
-        totalVolume.toLocaleString(
-            "en-IN"
-        );
-
-
-
-    document.getElementById(
-        "maximum-drawdown"
-    ).textContent =
-        formatNumber(
-            maximumDrawdown
-        ) + "%";
-
-
-
-    /* =========================================
-       DATE RANGE STATUS
-    ========================================== */
-
-    document.getElementById(
-        "selected-date-range"
-    ).textContent =
-        `${selectedStart} to ${selectedEnd} | ${filteredData.length.toLocaleString("en-IN")} trading days`;
-
-
-
-    /* =========================================
-       HISTORICAL CHART DATA
-    ========================================== */
-
-    const historicalDates =
-        filteredData.map(
-            row => row.Date
-        );
-
-
-    const closeValues =
-        filteredData.map(
-            row => Number(row.Close)
-        );
-
-
-    const highValues =
-        filteredData.map(
-            row => Number(row.High)
-        );
-
-
-    const lowValues =
-        filteredData.map(
-            row => Number(row.Low)
-        );
-
-
-
-    /* =========================================
-       HISTORICAL CHART TRACES
-    ========================================== */
-
-    const closeTrace = {
-
-        x: historicalDates,
-
-        y: closeValues,
-
-        mode: "lines",
-
-        name: "Close"
-
-    };
-
-
-
-    const highTrace = {
-
-        x: historicalDates,
-
-        y: highValues,
-
-        mode: "lines",
-
-        name: "High"
-
-    };
-
-
-
-    const lowTrace = {
-
-        x: historicalDates,
-
-        y: lowValues,
-
-        mode: "lines",
-
-        name: "Low"
-
-    };
-
-
-
-    /* =========================================
-       HISTORICAL CHART LAYOUT
-    ========================================== */
-
-    const historicalLayout = {
-
-        margin: {
-            l: 60,
-            r: 30,
-            t: 20,
-            b: 60
-        },
-
-        xaxis: {
-            title: "Date"
-        },
-
-        yaxis: {
-            title: "Price"
-        },
-
-        hovermode: "x unified",
-
-        legend: {
-            orientation: "h"
-        },
-
-        paper_bgcolor: "white",
-
-        plot_bgcolor: "white"
-
-    };
-
-
-
-    /* =========================================
-       RENDER HISTORICAL CHART
-    ========================================== */
-
-    Plotly.react(
-
-        "historical-chart",
-
-        [
-            closeTrace,
-            highTrace,
-            lowTrace
-        ],
-
-        historicalLayout,
-
-        {
-            responsive: true
-        }
-
-    );
-
-}
-
-
-
-/* =========================================
-   COMPANY CHANGE
-========================================= */
-
-companySelect.addEventListener(
-    "change",
-    function() {
-
-        setDefaultDates();
-
-        updateDashboard();
-
-        updateHistoricalAnalysis();
-
-    }
-);
-
-
-
-/* =========================================
-   DATE FILTER BUTTON
-========================================= */
-
-document.getElementById(
-    "apply-date-filter"
-).addEventListener(
-    "click",
-    function() {
-
-        updateHistoricalAnalysis();
-
-    }
-);
-
-
-
-/* =========================================
-   INITIAL DASHBOARD LOAD
-========================================= */
-
-setDefaultDates();
-
-updateDashboard();
-
-updateHistoricalAnalysis();
-
-
-</script>
-
-
-</body>
-
-</html>
