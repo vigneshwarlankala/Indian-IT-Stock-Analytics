@@ -1,0 +1,2825 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Indian IT Stock Analytics</title>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+
+<body>
+
+
+<!-- ===================================================== -->
+<!-- HEADER -->
+<!-- ===================================================== -->
+
+<header class="header">
+
+    <div class="header-content">
+
+        <div>
+
+            <h1>
+                Indian IT Stock Analytics
+            </h1>
+
+            <p>
+                Historical Analysis & Machine Learning Price Prediction
+            </p>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+
+<main class="container">
+
+
+<!-- ===================================================== -->
+<!-- COMPANY SELECTOR -->
+<!-- ===================================================== -->
+
+<section class="control-section">
+
+    <label for="company-select">
+        Select Company
+    </label>
+
+    <select id="company-select">
+
+        {% for company in companies %}
+
+        <option value="{{ company }}">
+            {{ company }}
+        </option>
+
+        {% endfor %}
+
+    </select>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- PRIMARY KPI CARDS -->
+<!-- ===================================================== -->
+
+<section class="cards">
+
+    <div class="card">
+
+        <h3>
+            Latest Price
+        </h3>
+
+        <p id="latest-price">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Predicted Price
+        </h3>
+
+        <p id="predicted-price">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Best Model
+        </h3>
+
+        <p id="best-model">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            R² Score
+        </h3>
+
+        <p id="r2-score">
+            --
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- ANALYTICS CARDS -->
+<!-- ===================================================== -->
+
+<section class="cards analytics-cards">
+
+
+    <div class="card">
+
+        <h3>
+            Prediction Change
+        </h3>
+
+        <p id="prediction-change">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Prediction Change %
+        </h3>
+
+        <p id="prediction-change-percent">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Historical High
+        </h3>
+
+        <p id="historical-high">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Historical Low
+        </h3>
+
+        <p id="historical-low">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Average Price
+        </h3>
+
+        <p id="average-price">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Prediction Error
+        </h3>
+
+        <p id="prediction-error">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Error %
+        </h3>
+
+        <p id="error-percent">
+            --
+        </p>
+
+    </div>
+
+
+    <div class="card">
+
+        <h3>
+            Data Points
+        </h3>
+
+        <p id="data-points">
+            --
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- ACTUAL VS PREDICTED -->
+<!-- ===================================================== -->
+
+<section class="chart-section">
+
+    <h2>
+        Actual vs Predicted Price
+    </h2>
+
+    <div id="price-chart"></div>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- MODEL PERFORMANCE -->
+<!-- ===================================================== -->
+
+<section class="model-section">
+
+    <h2>
+        Machine Learning Model Performance
+    </h2>
+
+
+    <div class="table-wrapper">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Model
+                    </th>
+
+                    <th>
+                        MAE
+                    </th>
+
+                    <th>
+                        RMSE
+                    </th>
+
+                    <th>
+                        R² Score
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="model-table-body">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- MODEL COMPARISON -->
+<!-- ===================================================== -->
+
+<section class="chart-section">
+
+    <h2>
+        Model Comparison
+    </h2>
+
+    <div id="model-chart"></div>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- PREDICTION ERROR ANALYSIS -->
+<!-- ===================================================== -->
+
+<section class="model-section">
+
+    <h2>
+        Prediction-Error Analysis
+    </h2>
+
+    <p style="
+        margin-top: -10px;
+        margin-bottom: 20px;
+        color: #64748b;
+        font-size: 14px;
+    ">
+        Analysis of the difference between actual and predicted stock prices.
+    </p>
+
+
+    <!-- PREDICTION ERROR -->
+
+    <section class="chart-section">
+
+        <h2>
+            Prediction Error
+        </h2>
+
+        <div id="prediction-error-chart"></div>
+
+    </section>
+
+
+    <!-- ABSOLUTE PREDICTION ERROR -->
+
+    <section class="chart-section">
+
+        <h2>
+            Absolute Prediction Error
+        </h2>
+
+        <div id="absolute-error-chart"></div>
+
+    </section>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- HISTORICAL STOCK ANALYSIS -->
+<!-- ===================================================== -->
+
+<section class="model-section">
+
+    <h2>
+        Historical Stock Analysis
+    </h2>
+
+
+    <!-- DATE FILTER -->
+
+    <div class="date-filter">
+
+        <div>
+
+            <label for="start-date">
+                Start Date
+            </label>
+
+            <input
+                type="date"
+                id="start-date"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label for="end-date">
+                End Date
+            </label>
+
+            <input
+                type="date"
+                id="end-date"
+            >
+
+        </div>
+
+
+        <button
+            type="button"
+            onclick="updateHistoricalAnalysis()"
+        >
+            Apply Filter
+        </button>
+
+    </div>
+
+
+
+    <!-- HISTORICAL KPI CARDS -->
+
+    <section class="cards historical-cards">
+
+
+        <div class="card">
+
+            <h3>
+                Opening Price
+            </h3>
+
+            <p id="historical-opening">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Closing Price
+            </h3>
+
+            <p id="historical-closing">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Period High
+            </h3>
+
+            <p id="period-high">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Period Low
+            </h3>
+
+            <p id="period-low">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Average Price
+            </h3>
+
+            <p id="historical-average">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Total Volume
+            </h3>
+
+            <p id="total-volume">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Period Return
+            </h3>
+
+            <p id="period-return">
+                --
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>
+                Maximum Drawdown
+            </h3>
+
+            <p id="maximum-drawdown">
+                --
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- HISTORICAL PRICE CHART -->
+
+    <section class="chart-section">
+
+        <h2>
+            Historical Price Trend
+        </h2>
+
+        <div id="historical-chart"></div>
+
+    </section>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- TECHNICAL INDICATORS -->
+<!-- ===================================================== -->
+
+<section class="model-section">
+
+    <h2>
+        Technical Indicators
+    </h2>
+
+    <p style="
+        margin-top: -10px;
+        margin-bottom: 20px;
+        color: #64748b;
+        font-size: 14px;
+    ">
+        Moving averages, RSI and Bollinger Bands calculated
+        from the processed historical stock data.
+    </p>
+
+
+    <!-- MOVING AVERAGES -->
+
+    <section class="chart-section">
+
+        <h2>
+            Moving Averages
+        </h2>
+
+        <div id="moving-average-chart"></div>
+
+    </section>
+
+
+    <!-- RSI -->
+
+    <section class="chart-section">
+
+        <h2>
+            RSI — 14 Day
+        </h2>
+
+        <div id="rsi-chart"></div>
+
+    </section>
+
+
+    <!-- BOLLINGER BANDS -->
+
+    <section class="chart-section">
+
+        <h2>
+            Bollinger Bands
+        </h2>
+
+        <div id="bollinger-chart"></div>
+
+    </section>
+
+</section>
+
+
+
+<!-- ===================================================== -->
+<!-- VOLUME ANALYSIS -->
+<!-- ===================================================== -->
+
+<section class="model-section">
+
+    <h2>
+        Volume Analysis
+    </h2>
+
+    <p style="
+        margin-top: -10px;
+        margin-bottom: 20px;
+        color: #64748b;
+        font-size: 14px;
+    ">
+        Trading volume and volume trend analysis.
+    </p>
+
+
+    <!-- TRADING VOLUME -->
+
+    <section class="chart-section">
+
+        <h2>
+            Trading Volume
+        </h2>
+
+        <div id="volume-chart"></div>
+
+    </section>
+
+
+    <!-- VOLUME RATIO -->
+
+    <section class="chart-section">
+
+        <h2>
+            Volume Ratio
+        </h2>
+
+        <div id="volume-ratio-chart"></div>
+
+    </section>
+
+</section>
+
+
+
+</main>
+
+
+
+<!-- ===================================================== -->
+<!-- FOOTER -->
+<!-- ===================================================== -->
+
+<footer class="footer">
+
+    <p>
+        Indian IT Stock Analytics |
+        Historical Data & Machine Learning Analysis
+    </p>
+
+</footer>
+
+
+
+<!-- ===================================================== -->
+<!-- JAVASCRIPT -->
+<!-- ===================================================== -->
+
+<script>
+
+
+/* ===================================================== */
+/* DATA FROM FLASK */
+/* ===================================================== */
+
+const predictions =
+    {{ predictions | tojson }};
+
+
+const modelComparison =
+    {{ model_comparison | tojson }};
+
+
+const historicalData =
+    {{ historical_data | tojson }};
+
+
+
+/* ===================================================== */
+/* COMPANY SELECTOR */
+/* ===================================================== */
+
+const companySelect =
+    document.getElementById(
+        "company-select"
+    );
+
+
+
+/* ===================================================== */
+/* NUMBER FORMAT */
+/* ===================================================== */
+
+function formatNumber(
+    value,
+    decimals = 2
+) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        isNaN(value)
+    ) {
+
+        return "--";
+
+    }
+
+    return Number(value).toFixed(
+        decimals
+    );
+
+}
+
+
+
+function formatPrice(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        isNaN(value)
+    ) {
+
+        return "--";
+
+    }
+
+    return Number(value).toFixed(2);
+
+}
+
+
+
+/* ===================================================== */
+/* SELECTED COMPANY */
+/* ===================================================== */
+
+function getSelectedCompany() {
+
+    return companySelect.value;
+
+}
+
+
+
+/* ===================================================== */
+/* MAIN DASHBOARD */
+/* ===================================================== */
+
+function updateDashboard() {
+
+
+    const company =
+        getSelectedCompany();
+
+
+    const companyPredictions =
+        predictions.filter(
+            row =>
+                row.Company === company
+        );
+
+
+    const companyModels =
+        modelComparison.filter(
+            row =>
+                row.Company === company
+        );
+
+
+    const companyHistorical =
+        historicalData.filter(
+            row =>
+                row.Company === company
+        );
+
+
+    if (
+        companyPredictions.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+
+    /* ================================================= */
+    /* SORT PREDICTIONS */
+    /* ================================================= */
+
+    companyPredictions.sort(
+        (a, b) =>
+            new Date(a.Date) -
+            new Date(b.Date)
+    );
+
+
+
+    /* ================================================= */
+    /* LATEST PREDICTION */
+    /* ================================================= */
+
+    const latest =
+        companyPredictions[
+            companyPredictions.length - 1
+        ];
+
+
+    const actual =
+        Number(
+            latest.Actual_Close
+        );
+
+
+    const predicted =
+        Number(
+            latest.Predicted_Close
+        );
+
+
+
+    /* ================================================= */
+    /* PRIMARY CARDS */
+    /* ================================================= */
+
+    document.getElementById(
+        "latest-price"
+    ).innerText =
+        formatPrice(actual);
+
+
+    document.getElementById(
+        "predicted-price"
+    ).innerText =
+        formatPrice(predicted);
+
+
+
+    /* ================================================= */
+    /* PREDICTION CHANGE */
+    /* ================================================= */
+
+    const predictionChange =
+        predicted - actual;
+
+
+    document.getElementById(
+        "prediction-change"
+    ).innerText =
+        formatPrice(
+            predictionChange
+        );
+
+
+    let predictionChangePercent =
+        0;
+
+
+    if (actual !== 0) {
+
+        predictionChangePercent =
+            (
+                predictionChange /
+                actual
+            ) * 100;
+
+    }
+
+
+    document.getElementById(
+        "prediction-change-percent"
+    ).innerText =
+        formatNumber(
+            predictionChangePercent
+        ) + "%";
+
+
+
+    /* ================================================= */
+    /* PREDICTION ERROR */
+    /* ================================================= */
+
+    const predictionError =
+        Math.abs(
+            predicted - actual
+        );
+
+
+    document.getElementById(
+        "prediction-error"
+    ).innerText =
+        formatPrice(
+            predictionError
+        );
+
+
+    let errorPercent =
+        0;
+
+
+    if (actual !== 0) {
+
+        errorPercent =
+            (
+                predictionError /
+                actual
+            ) * 100;
+
+    }
+
+
+    document.getElementById(
+        "error-percent"
+    ).innerText =
+        formatNumber(
+            errorPercent
+        ) + "%";
+
+
+
+    /* ================================================= */
+    /* HISTORICAL ANALYTICS */
+    /* ================================================= */
+
+    if (
+        companyHistorical.length > 0
+    ) {
+
+        const closeValues =
+            companyHistorical
+                .map(
+                    row =>
+                        Number(row.Close)
+                )
+                .filter(
+                    value =>
+                        !isNaN(value)
+                );
+
+
+        if (
+            closeValues.length > 0
+        ) {
+
+            const high =
+                Math.max(
+                    ...closeValues
+                );
+
+
+            const low =
+                Math.min(
+                    ...closeValues
+                );
+
+
+            const average =
+                closeValues.reduce(
+                    (sum, value) =>
+                        sum + value,
+                    0
+                ) /
+                closeValues.length;
+
+
+            document.getElementById(
+                "historical-high"
+            ).innerText =
+                formatPrice(high);
+
+
+            document.getElementById(
+                "historical-low"
+            ).innerText =
+                formatPrice(low);
+
+
+            document.getElementById(
+                "average-price"
+            ).innerText =
+                formatPrice(average);
+
+
+            document.getElementById(
+                "data-points"
+            ).innerText =
+                closeValues.length;
+
+        }
+
+    }
+
+
+
+    /* ================================================= */
+    /* BEST MODEL */
+    /* ================================================= */
+
+    let bestModel = null;
+
+
+    if (
+        companyModels.length > 0
+    ) {
+
+        const validModels =
+            companyModels.filter(
+                row =>
+                    row.R2_Score !== null &&
+                    row.R2_Score !== undefined &&
+                    !isNaN(
+                        Number(
+                            row.R2_Score
+                        )
+                    )
+            );
+
+
+        if (
+            validModels.length > 0
+        ) {
+
+            bestModel =
+                validModels.reduce(
+                    (
+                        best,
+                        current
+                    ) => {
+
+                        if (
+                            Number(
+                                current.R2_Score
+                            ) >
+                            Number(
+                                best.R2_Score
+                            )
+                        ) {
+
+                            return current;
+
+                        }
+
+                        return best;
+
+                    }
+                );
+
+        }
+
+    }
+
+
+    if (bestModel) {
+
+        document.getElementById(
+            "best-model"
+        ).innerText =
+            bestModel.Model;
+
+
+        document.getElementById(
+            "r2-score"
+        ).innerText =
+            formatNumber(
+                Number(
+                    bestModel.R2_Score
+                ),
+                4
+            );
+
+    }
+
+
+
+    /* ================================================= */
+    /* TABLE */
+    /* ================================================= */
+
+    updateModelTable(
+        companyModels
+    );
+
+
+
+    /* ================================================= */
+    /* CHARTS */
+    /* ================================================= */
+
+    updatePriceChart(
+        companyPredictions
+    );
+
+
+    updateModelChart(
+        companyModels
+    );
+
+
+    updatePredictionErrorChart(
+        companyPredictions
+    );
+
+
+    updateAbsolutePredictionErrorChart(
+        companyPredictions
+    );
+
+
+
+    /* ================================================= */
+    /* HISTORICAL */
+    /* ================================================= */
+
+    setDefaultDates(
+        companyHistorical
+    );
+
+
+    updateHistoricalAnalysis();
+
+}
+
+
+
+/* ===================================================== */
+/* MODEL TABLE */
+/* ===================================================== */
+
+function updateModelTable(
+    models
+) {
+
+    const tableBody =
+        document.getElementById(
+            "model-table-body"
+        );
+
+
+    tableBody.innerHTML = "";
+
+
+    models.forEach(
+        model => {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${model.Model}
+                </td>
+
+                <td>
+                    ${formatNumber(
+                        Number(model.MAE)
+                    )}
+                </td>
+
+                <td>
+                    ${formatNumber(
+                        Number(model.RMSE)
+                    )}
+                </td>
+
+                <td>
+                    ${formatNumber(
+                        Number(
+                            model.R2_Score
+                        ),
+                        4
+                    )}
+                </td>
+
+            `;
+
+
+            tableBody.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* ACTUAL VS PREDICTED */
+/* ===================================================== */
+
+function updatePriceChart(
+    data
+) {
+
+    const dates =
+        data.map(
+            row =>
+                row.Date
+        );
+
+
+    const actual =
+        data.map(
+            row =>
+                Number(
+                    row.Actual_Close
+                )
+        );
+
+
+    const predicted =
+        data.map(
+            row =>
+                Number(
+                    row.Predicted_Close
+                )
+        );
+
+
+    const actualTrace = {
+
+        x: dates,
+
+        y: actual,
+
+        mode: "lines",
+
+        name: "Actual Price"
+
+    };
+
+
+    const predictedTrace = {
+
+        x: dates,
+
+        y: predicted,
+
+        mode: "lines",
+
+        name: "Predicted Price"
+
+    };
+
+
+    const layout = {
+
+        title:
+            "Actual vs Predicted Price",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Price"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 60,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        },
+
+        legend: {
+
+            orientation:
+                "h"
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "price-chart",
+
+        [
+            actualTrace,
+            predictedTrace
+        ],
+
+        layout,
+
+        {
+            responsive: true
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* MODEL COMPARISON */
+/* ===================================================== */
+
+function updateModelChart(
+    models
+) {
+
+    const names =
+        models.map(
+            row =>
+                row.Model
+        );
+
+
+    const r2 =
+        models.map(
+            row =>
+                Number(
+                    row.R2_Score
+                )
+        );
+
+
+    const trace = {
+
+        x: names,
+
+        y: r2,
+
+        type: "bar",
+
+        name: "R² Score"
+
+    };
+
+
+    const layout = {
+
+        title:
+            "R² Score by Model",
+
+        xaxis: {
+
+            title: "Model"
+
+        },
+
+        yaxis: {
+
+            title: "R² Score"
+
+        },
+
+        margin: {
+
+            l: 60,
+
+            r: 30,
+
+            t: 60,
+
+            b: 80
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "model-chart",
+
+        [trace],
+
+        layout,
+
+        {
+            responsive: true
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* PREDICTION ERROR */
+/* ===================================================== */
+
+function updatePredictionErrorChart(
+    data
+) {
+
+    const dates =
+        data.map(
+            row =>
+                row.Date
+        );
+
+
+    const errors =
+        data.map(
+            row =>
+                Number(
+                    row.Predicted_Close
+                ) -
+                Number(
+                    row.Actual_Close
+                )
+        );
+
+
+    const trace = {
+
+        x: dates,
+
+        y: errors,
+
+        mode: "lines",
+
+        name: "Prediction Error"
+
+    };
+
+
+    const layout = {
+
+        title:
+            "Prediction Error Over Time",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Prediction Error"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 70,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "prediction-error-chart",
+
+        [trace],
+
+        layout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* ABSOLUTE PREDICTION ERROR */
+/* ===================================================== */
+
+function updateAbsolutePredictionErrorChart(
+    data
+) {
+
+    const dates =
+        data.map(
+            row =>
+                row.Date
+        );
+
+
+    const errors =
+        data.map(
+            row =>
+                Math.abs(
+                    Number(
+                        row.Predicted_Close
+                    ) -
+                    Number(
+                        row.Actual_Close
+                    )
+                )
+        );
+
+
+    const trace = {
+
+        x: dates,
+
+        y: errors,
+
+        mode: "lines",
+
+        name: "Absolute Prediction Error"
+
+    };
+
+
+    const layout = {
+
+        title:
+            "Absolute Prediction Error Over Time",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Absolute Error"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 70,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "absolute-error-chart",
+
+        [trace],
+
+        layout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* DEFAULT DATES */
+/* ===================================================== */
+
+function setDefaultDates(
+    data
+) {
+
+    if (
+        !data ||
+        data.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const dates =
+        data
+            .map(
+                row =>
+                    row.Date
+            )
+            .sort(
+                (a, b) =>
+                    new Date(a) -
+                    new Date(b)
+            );
+
+
+    document.getElementById(
+        "start-date"
+    ).value =
+        dates[0];
+
+
+    document.getElementById(
+        "end-date"
+    ).value =
+        dates[
+            dates.length - 1
+        ];
+
+}
+
+
+
+/* ===================================================== */
+/* HISTORICAL ANALYSIS */
+/* ===================================================== */
+
+function updateHistoricalAnalysis() {
+
+
+    const company =
+        getSelectedCompany();
+
+
+    const startDate =
+        document.getElementById(
+            "start-date"
+        ).value;
+
+
+    const endDate =
+        document.getElementById(
+            "end-date"
+        ).value;
+
+
+    let data =
+        historicalData.filter(
+            row =>
+                row.Company === company
+        );
+
+
+    if (startDate) {
+
+        data =
+            data.filter(
+                row =>
+                    row.Date >= startDate
+            );
+
+    }
+
+
+    if (endDate) {
+
+        data =
+            data.filter(
+                row =>
+                    row.Date <= endDate
+            );
+
+    }
+
+
+    data.sort(
+        (a, b) =>
+            new Date(a.Date) -
+            new Date(b.Date)
+    );
+
+
+    if (
+        data.length === 0
+    ) {
+
+        clearHistoricalCards();
+
+        Plotly.purge(
+            "historical-chart"
+        );
+
+        Plotly.purge(
+            "volume-chart"
+        );
+
+        Plotly.purge(
+            "volume-ratio-chart"
+        );
+
+        return;
+
+    }
+
+
+
+    /* ================================================= */
+    /* OPENING */
+    /* ================================================= */
+
+    const openingPrice =
+        Number(
+            data[0].Open
+        );
+
+
+    document.getElementById(
+        "historical-opening"
+    ).innerText =
+        formatPrice(
+            openingPrice
+        );
+
+
+
+    /* ================================================= */
+    /* CLOSING */
+    /* ================================================= */
+
+    const closingPrice =
+        Number(
+            data[
+                data.length - 1
+            ].Close
+        );
+
+
+    document.getElementById(
+        "historical-closing"
+    ).innerText =
+        formatPrice(
+            closingPrice
+        );
+
+
+
+    /* ================================================= */
+    /* CLOSE VALUES */
+    /* ================================================= */
+
+    const prices =
+        data
+            .map(
+                row =>
+                    Number(row.Close)
+            )
+            .filter(
+                value =>
+                    !isNaN(value)
+            );
+
+
+
+    /* ================================================= */
+    /* HIGH */
+    /* ================================================= */
+
+    const high =
+        Math.max(
+            ...prices
+        );
+
+
+    document.getElementById(
+        "period-high"
+    ).innerText =
+        formatPrice(high);
+
+
+
+    /* ================================================= */
+    /* LOW */
+    /* ================================================= */
+
+    const low =
+        Math.min(
+            ...prices
+        );
+
+
+    document.getElementById(
+        "period-low"
+    ).innerText =
+        formatPrice(low);
+
+
+
+    /* ================================================= */
+    /* AVERAGE */
+    /* ================================================= */
+
+    const average =
+        prices.reduce(
+            (sum, value) =>
+                sum + value,
+            0
+        ) /
+        prices.length;
+
+
+    document.getElementById(
+        "historical-average"
+    ).innerText =
+        formatPrice(
+            average
+        );
+
+
+
+    /* ================================================= */
+    /* VOLUME */
+    /* ================================================= */
+
+    const totalVolume =
+        data.reduce(
+            (sum, row) =>
+                sum +
+                Number(
+                    row.Volume || 0
+                ),
+            0
+        );
+
+
+    document.getElementById(
+        "total-volume"
+    ).innerText =
+        totalVolume.toLocaleString();
+
+
+
+    /* ================================================= */
+    /* RETURN */
+    /* ================================================= */
+
+    let periodReturn = 0;
+
+
+    if (
+        openingPrice !== 0
+    ) {
+
+        periodReturn =
+            (
+                (
+                    closingPrice -
+                    openingPrice
+                ) /
+                openingPrice
+            ) * 100;
+
+    }
+
+
+    document.getElementById(
+        "period-return"
+    ).innerText =
+        formatNumber(
+            periodReturn
+        ) + "%";
+
+
+
+    /* ================================================= */
+    /* MAX DRAWDOWN */
+    /* ================================================= */
+
+    let peak =
+        -Infinity;
+
+
+    let maxDrawdown =
+        0;
+
+
+    prices.forEach(
+        price => {
+
+            if (
+                price > peak
+            ) {
+
+                peak = price;
+
+            }
+
+
+            if (
+                peak > 0
+            ) {
+
+                const drawdown =
+                    (
+                        (
+                            price -
+                            peak
+                        ) /
+                        peak
+                    ) * 100;
+
+
+                if (
+                    drawdown <
+                    maxDrawdown
+                ) {
+
+                    maxDrawdown =
+                        drawdown;
+
+                }
+
+            }
+
+        }
+    );
+
+
+    document.getElementById(
+        "maximum-drawdown"
+    ).innerText =
+        formatNumber(
+            maxDrawdown
+        ) + "%";
+
+
+
+    /* ================================================= */
+    /* HISTORICAL CHART */
+    /* ================================================= */
+
+    updateHistoricalChart(
+        data
+    );
+
+
+
+    /* ================================================= */
+    /* TECHNICAL INDICATORS */
+    /* ================================================= */
+
+    updateTechnicalIndicators(
+        data
+    );
+
+
+
+    /* ================================================= */
+    /* VOLUME ANALYSIS */
+    /* ================================================= */
+
+    updateVolumeAnalysis(
+        data
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* CLEAR HISTORICAL CARDS */
+/* ===================================================== */
+
+function clearHistoricalCards() {
+
+
+    const ids = [
+
+        "historical-opening",
+
+        "historical-closing",
+
+        "period-high",
+
+        "period-low",
+
+        "historical-average",
+
+        "total-volume",
+
+        "period-return",
+
+        "maximum-drawdown"
+
+    ];
+
+
+    ids.forEach(
+        id => {
+
+            document.getElementById(
+                id
+            ).innerText =
+                "--";
+
+        }
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* HISTORICAL CHART */
+/* ===================================================== */
+
+function updateHistoricalChart(
+    data
+) {
+
+    const dates =
+        data.map(
+            row =>
+                row.Date
+        );
+
+
+    const close =
+        data.map(
+            row =>
+                Number(
+                    row.Close
+                )
+        );
+
+
+    const trace = {
+
+        x: dates,
+
+        y: close,
+
+        mode: "lines",
+
+        name: "Closing Price"
+
+    };
+
+
+    const layout = {
+
+        title:
+            "Historical Closing Price",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Price"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 60,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "historical-chart",
+
+        [trace],
+
+        layout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* TECHNICAL INDICATORS */
+/* ===================================================== */
+
+function updateTechnicalIndicators(
+    data
+) {
+
+
+    const dates =
+        data.map(
+            row =>
+                row.Date
+        );
+
+
+
+    /* ================================================= */
+    /* CLOSE */
+    /* ================================================= */
+
+    const close =
+        data.map(
+            row =>
+                Number(
+                    row.Close
+                )
+        );
+
+
+
+    /* ================================================= */
+    /* MOVING AVERAGES */
+    /* ================================================= */
+
+    const ma20 =
+        data.map(
+            row =>
+                Number(
+                    row.MA_20
+                )
+        );
+
+
+    const ma50 =
+        data.map(
+            row =>
+                Number(
+                    row.MA_50
+                )
+        );
+
+
+    const ma200 =
+        data.map(
+            row =>
+                Number(
+                    row.MA_200
+                )
+        );
+
+
+    const priceTrace = {
+
+        x: dates,
+
+        y: close,
+
+        mode: "lines",
+
+        name: "Close"
+
+    };
+
+
+    const ma20Trace = {
+
+        x: dates,
+
+        y: ma20,
+
+        mode: "lines",
+
+        name: "MA 20"
+
+    };
+
+
+    const ma50Trace = {
+
+        x: dates,
+
+        y: ma50,
+
+        mode: "lines",
+
+        name: "MA 50"
+
+    };
+
+
+    const ma200Trace = {
+
+        x: dates,
+
+        y: ma200,
+
+        mode: "lines",
+
+        name: "MA 200"
+
+    };
+
+
+    const movingAverageLayout = {
+
+        title:
+            "Price and Moving Averages",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Price"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 60,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        },
+
+        legend: {
+
+            orientation:
+                "h"
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "moving-average-chart",
+
+        [
+            priceTrace,
+            ma20Trace,
+            ma50Trace,
+            ma200Trace
+        ],
+
+        movingAverageLayout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+
+
+    /* ================================================= */
+    /* RSI */
+    /* ================================================= */
+
+    const rsi =
+        data.map(
+            row =>
+                Number(
+                    row.RSI_14
+                )
+        );
+
+
+    const rsiTrace = {
+
+        x: dates,
+
+        y: rsi,
+
+        mode: "lines",
+
+        name: "RSI 14"
+
+    };
+
+
+    const rsiLayout = {
+
+        title:
+            "Relative Strength Index",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "RSI",
+
+            range: [
+                0,
+                100
+            ]
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 60,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "rsi-chart",
+
+        [rsiTrace],
+
+        rsiLayout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+
+
+    /* ================================================= */
+    /* BOLLINGER BANDS */
+    /* ================================================= */
+
+    const bbMiddle =
+        data.map(
+            row =>
+                Number(
+                    row.BB_Middle
+                )
+        );
+
+
+    const bbUpper =
+        data.map(
+            row =>
+                Number(
+                    row.BB_Upper
+                )
+        );
+
+
+    const bbLower =
+        data.map(
+            row =>
+                Number(
+                    row.BB_Lower
+                )
+        );
+
+
+    const bbCloseTrace = {
+
+        x: dates,
+
+        y: close,
+
+        mode: "lines",
+
+        name: "Close"
+
+    };
+
+
+    const bbMiddleTrace = {
+
+        x: dates,
+
+        y: bbMiddle,
+
+        mode: "lines",
+
+        name: "BB Middle"
+
+    };
+
+
+    const bbUpperTrace = {
+
+        x: dates,
+
+        y: bbUpper,
+
+        mode: "lines",
+
+        name: "BB Upper"
+
+    };
+
+
+    const bbLowerTrace = {
+
+        x: dates,
+
+        y: bbLower,
+
+        mode: "lines",
+
+        name: "BB Lower"
+
+    };
+
+
+    const bollingerLayout = {
+
+        title:
+            "Bollinger Bands",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Price"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 60,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        },
+
+        legend: {
+
+            orientation:
+                "h"
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "bollinger-chart",
+
+        [
+            bbCloseTrace,
+            bbMiddleTrace,
+            bbUpperTrace,
+            bbLowerTrace
+        ],
+
+        bollingerLayout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* VOLUME ANALYSIS */
+/* ===================================================== */
+
+function updateVolumeAnalysis(
+    data
+) {
+
+
+    const dates =
+        data.map(
+            row =>
+                row.Date
+        );
+
+
+    const volume =
+        data.map(
+            row =>
+                Number(
+                    row.Volume
+                )
+        );
+
+
+    const volumeMA20 =
+        data.map(
+            row =>
+                Number(
+                    row.Volume_MA_20
+                )
+        );
+
+
+    const volumeRatio =
+        data.map(
+            row =>
+                Number(
+                    row.Volume_Ratio
+                )
+        );
+
+
+
+    /* ================================================= */
+    /* TRADING VOLUME */
+    /* ================================================= */
+
+    const volumeTrace = {
+
+        x: dates,
+
+        y: volume,
+
+        type: "bar",
+
+        name: "Trading Volume"
+
+    };
+
+
+    const volumeMATrace = {
+
+        x: dates,
+
+        y: volumeMA20,
+
+        mode: "lines",
+
+        name: "20-Day Average Volume"
+
+    };
+
+
+    const volumeLayout = {
+
+        title:
+            "Trading Volume vs 20-Day Average",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Volume"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 70,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        },
+
+        legend: {
+
+            orientation:
+                "h"
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "volume-chart",
+
+        [
+            volumeTrace,
+            volumeMATrace
+        ],
+
+        volumeLayout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+
+
+    /* ================================================= */
+    /* VOLUME RATIO */
+    /* ================================================= */
+
+    const volumeRatioTrace = {
+
+        x: dates,
+
+        y: volumeRatio,
+
+        mode: "lines",
+
+        name: "Volume Ratio"
+
+    };
+
+
+    const volumeRatioLayout = {
+
+        title:
+            "Volume Ratio",
+
+        xaxis: {
+
+            title: "Date"
+
+        },
+
+        yaxis: {
+
+            title: "Volume Ratio"
+
+        },
+
+        hovermode:
+            "x unified",
+
+        margin: {
+
+            l: 70,
+
+            r: 30,
+
+            t: 60,
+
+            b: 60
+
+        }
+
+    };
+
+
+    Plotly.newPlot(
+
+        "volume-ratio-chart",
+
+        [volumeRatioTrace],
+
+        volumeRatioLayout,
+
+        {
+
+            responsive: true
+
+        }
+
+    );
+
+}
+
+
+
+/* ===================================================== */
+/* COMPANY CHANGE */
+/* ===================================================== */
+
+companySelect.addEventListener(
+    "change",
+    function () {
+
+        updateDashboard();
+
+    }
+);
+
+
+
+/* ===================================================== */
+/* INITIAL LOAD */
+/* ===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        updateDashboard();
+
+    }
+);
+
+
+</script>
+
+
+
+</body>
+
+</html>
